@@ -1,5 +1,1 @@
-db-data/
-redis-data/
-panel-data/
-backups/
-.env
+*.log
