@@ -1,0 +1,61 @@
+services:
+  database:
+    image: mariadb:11
+    container_name: ptero-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: ${TZ}
+    volumes:
+      - ./db-data:/var/lib/mysql
+    networks:
+      - ptero-network
+
+  redis:
+    image: redis:7
+    container_name: ptero-redis
+    restart: unless-stopped
+    volumes:
+      - ./redis-data:/data
+    networks:
+      - ptero-network
+
+  panel:
+    image: ghcr.io/pterodactyl/panel:latest
+    container_name: ptero-panel
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - database
+      - redis
+    environment:
+      APP_URL: ${PANEL_URL}
+      APP_ENV: ${APP_ENV}
+      APP_DEBUG: ${APP_DEBUG}
+      APP_TIMEZONE: ${APP_TIMEZONE}
+
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_DATABASE: ${MYSQL_DATABASE}
+      DB_USERNAME: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      TZ: ${TZ}
+    volumes:
+      - ./panel-data:/app/var
+    networks:
+      - ptero-network
+
+networks:
+  ptero-network:
